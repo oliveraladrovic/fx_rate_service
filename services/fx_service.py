@@ -18,6 +18,7 @@ async def fetch_quotes(base_quote: str):
             raise ValueError("Invalid API response")
         return data["rates"]
     
+# Sequentuial version, not used currently because it is too slow
 async def collect_data():
     list_of_currencies = await collect_base_currencies()
     base = []
@@ -33,3 +34,19 @@ async def collect_data():
         ]
         base.extend(rates_in)
     return base
+
+# Parallel version, currently in use
+async def collect_data_parallel():
+    list_of_currencies = await collect_base_currencies()
+    tasks = [fetch_quotes(currency) for currency in list_of_currencies]
+    results = await asyncio.gather(*tasks)
+    base = []
+    for currency, currency_rates in zip(list_of_currencies, results):
+        base.extend([
+            {
+                "base_currency": currency,
+                "quote_currency": k,
+                "rate": v
+            }
+            for k, v in currency_rates.items()
+        ])

@@ -6,13 +6,13 @@ from sqlalchemy import select
 from database import get_db
 from models import FXRate
 from schemes import FXRateOut
-from services.fx_service import collect_data
+from services.fx_service import collect_data_parallel
 
 app = FastAPI()
 
 @app.post("/rates")
 async def create_fxrate(db: AsyncSession = Depends(get_db)):
-    data = await collect_data()
+    data = await collect_data_parallel()
     inserted = 0
     updated = 0
     for d in data:
@@ -22,10 +22,10 @@ async def create_fxrate(db: AsyncSession = Depends(get_db)):
         if existing:
             existing.rate = d["rate"]
             existing.timestamp = datetime.now(timezone.utc)
-            inserted += 1
+            updated += 1
         else:
             db.add(FXRate(**d))
-            updated += 1
+            inserted += 1
     await db.commit()
     return {
         "inserted": inserted,
