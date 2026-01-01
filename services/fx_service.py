@@ -50,3 +50,4 @@ async def collect_data_parallel():
             }
             for k, v in currency_rates.items()
         ])
+    return base
